@@ -1,0 +1,52 @@
+{
+  "name": "Habitly - Smart Habit Tracker",
+  "short_name": "Habitly",
+  "description": "Your emotionally intelligent habit tracking companion with analytics, achievements, and challenges",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDF8F6",
+  "theme_color": "#FF6B5A",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["productivity", "health", "lifestyle"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "shortcuts": [
+    {
+      "name": "Quick Check-in",
+      "short_name": "Check-in",
+      "description": "Mark your habits as complete",
+      "url": "/",
+      "icons": []
+    },
+    {
+      "name": "View Analytics",
+      "short_name": "Analytics",
+      "description": "Check your habit progress and insights",
+      "url": "/analytics",
+      "icons": []
+    },
+    {
+      "name": "Achievements",
+      "short_name": "Achievements",
+      "description": "View your unlocked achievements",
+      "url": "/achievements",
+      "icons": []
+    },
+    {
+      "name": "Join Challenges",
+      "short_name": "Challenges",
+      "description": "Participate in habit challenges",
+      "url": "/challenges",
+      "icons": []
+    }
+  ]
+}
