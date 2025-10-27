@@ -67,8 +67,8 @@ export const HabitTracker = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background pb-20">
-        <div className="bg-gradient-warm shadow-soft">
+      <div className="min-h-screen bg-background dark:bg-gray-950 pb-20">
+        <div className="bg-gradient-warm dark:bg-gray-900 shadow-soft">
           <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1">
@@ -91,9 +91,9 @@ export const HabitTracker = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background dark:bg-gray-950 pb-20">
       {/* Header */}
-      <div className="bg-gradient-warm shadow-soft">
+      <div className="bg-gradient-warm dark:bg-gray-900 shadow-soft">
         <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex-1">

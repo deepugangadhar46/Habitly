@@ -9,6 +9,7 @@ import { scheduleEmotionalNudge, showStreakMilestoneNotification } from '@/lib/n
 import type { MoodEmoji } from '@/lib/quotes';
 import { getStreakMilestoneQuote } from '@/lib/quoteEngine';
 import { toast } from 'sonner';
+import { ReminderSettings } from '@/components/ReminderSettings';
 
 interface HabitCardProps {
   habit: Habit & {
@@ -96,6 +97,7 @@ export const HabitCard = ({ habit, todayEntry, onUpdate }: HabitCardProps) => {
       relative overflow-hidden transition-all duration-300 hover:shadow-warm
       ${isCompleted ? 'bg-gradient-success' : 'bg-gradient-glass'}
       ${isAnimating ? 'scale-105' : 'scale-100'}
+      dark:bg-gray-900 dark:border-gray-700
     `}>
       <div className="p-6">
         {/* Header */}
@@ -127,6 +129,11 @@ export const HabitCard = ({ habit, todayEntry, onUpdate }: HabitCardProps) => {
               <span className="text-base">{todayEntry.mood}</span>
             </span>
           )}
+        </div>
+
+        {/* Reminder Settings */}
+        <div className="mb-4">
+          <ReminderSettings habit={habit} onUpdate={onUpdate} />
         </div>
 
         {/* Action Button */}
