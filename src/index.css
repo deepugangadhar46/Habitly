@@ -137,3 +137,21 @@ All colors MUST be HSL. Warm, encouraging, and emotionally supportive.
     @apply bg-background text-foreground;
   }
 }
+
+/* Analytics Calendar Customization */
+@media (min-width: 1024px) {
+  .analytics-calendar {
+    max-width: 960px;
+    font-size: 0.85rem;
+  }
+  
+  .analytics-calendar__tile {
+    padding: 0.3rem;
+    min-height: 52px;
+  }
+  
+  .emoji-dot {
+    font-size: 12px;
+    line-height: 1;
+  }
+}

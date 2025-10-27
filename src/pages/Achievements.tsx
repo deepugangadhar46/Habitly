@@ -1,42 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Trophy, Lock, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { enhancedDb, initializeAchievements, Achievement } from '@/lib/database-enhanced';
 import { getHabitsWithStreaks } from '@/lib/database';
+import { initializeAchievements } from '@/lib/database-enhanced';
+import { useAchievements } from '@/hooks/useAchievements';
 
 const Achievements = () => {
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [unlockedCount, setUnlockedCount] = useState(0);
+  const { achievements, stats, loading, evaluateAndUnlock, refresh } = useAchievements();
   const [totalPoints, setTotalPoints] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadAchievements();
-  }, []);
-
-  const loadAchievements = async () => {
-    try {
+    const init = async () => {
       await initializeAchievements();
-      const allAchievements = await enhancedDb.achievements.toArray();
-      setAchievements(allAchievements);
-      
-      const unlocked = allAchievements.filter(a => a.unlockedAt).length;
-      setUnlockedCount(unlocked);
-      
-      // Calculate total points (mock calculation)
+      await evaluateAndUnlock();
+    };
+    init();
+  }, [evaluateAndUnlock]);
+
+  useEffect(() => {
+    const calc = async () => {
       const habits = await getHabitsWithStreaks();
-      const points = habits.reduce((sum, habit) => sum + (habit.currentStreak * 10), 0);
+      const points = habits.reduce((sum, h) => sum + h.currentStreak, 0);
       setTotalPoints(points);
-      
-    } catch (error) {
-      console.error('Error loading achievements:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    calc();
+  }, [achievements]);
 
   const achievementCategories = [
     {
@@ -56,7 +47,7 @@ const Achievements = () => {
     }
   ];
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -96,7 +87,7 @@ const Achievements = () => {
               <Trophy className="w-8 h-8 text-warning" />
               <div>
                 <p className="text-sm text-muted-foreground">Unlocked</p>
-                <p className="text-3xl font-bold">{unlockedCount}</p>
+                <p className="text-3xl font-bold">{stats.unlocked}</p>
                 <p className="text-sm text-muted-foreground">of {achievements.length} achievements</p>
               </div>
             </div>
@@ -118,7 +109,7 @@ const Achievements = () => {
               <div className="text-3xl">🎯</div>
               <div>
                 <p className="text-sm text-muted-foreground">Progress</p>
-                <p className="text-3xl font-bold">{Math.round((unlockedCount / achievements.length) * 100)}%</p>
+                <p className="text-3xl font-bold">{achievements.length > 0 ? Math.round((stats.unlocked / achievements.length) * 100) : 0}%</p>
                 <p className="text-sm text-muted-foreground">Complete</p>
               </div>
             </div>
@@ -148,7 +139,11 @@ const Achievements = () => {
                   >
                     <div className="flex items-start space-x-4">
                       <div className={`text-4xl ${isUnlocked ? '' : 'grayscale'}`}>
-                        {isUnlocked ? achievement.icon : <Lock className="w-8 h-8 text-muted-foreground" />}
+                        {isUnlocked ? (
+                          <span>{achievement.icon}</span>
+                        ) : (
+                          <Lock className="w-8 h-8 text-muted-foreground" />
+                        )}
                       </div>
                       
                       <div className="flex-1">

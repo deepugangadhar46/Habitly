@@ -49,6 +49,9 @@ export interface Challenge {
   habitIds: number[];
   isActive: boolean;
   participants?: number;
+  // Optional, not indexed: user-specific state stored in the same record (single-user app)
+  isJoined?: boolean;
+  completedDates?: string[]; // YYYY-MM-DD unique dates counted toward progress
 }
 
 export interface Goal {
@@ -183,4 +186,45 @@ export const calculatePoints = (difficulty: string, streak: number): number => {
   
   const streakMultiplier = Math.min(1 + (streak * 0.1), 3); // Max 3x multiplier
   return Math.round(basePoints[difficulty as keyof typeof basePoints] * streakMultiplier);
+};
+
+// Update challenge progress for a given habit completion toggle
+// dateStr must be in YYYY-MM-DD format
+export const updateChallengesProgressForHabit = async (
+  habitId: number,
+  completed: boolean,
+  dateStr: string
+) => {
+  try {
+    const now = new Date();
+    const activeJoined = await enhancedDb.challenges
+      .filter(c => (c.isJoined === true) && c.isActive && c.startDate <= now && c.endDate >= now)
+      .toArray();
+
+    if (activeJoined.length === 0) return;
+
+    for (const challenge of activeJoined) {
+      const appliesToHabit = !challenge.habitIds || challenge.habitIds.length === 0 || challenge.habitIds.includes(habitId);
+      if (!appliesToHabit) continue;
+
+      const dates = Array.isArray(challenge.completedDates) ? [...challenge.completedDates] : [];
+
+      const idx = dates.indexOf(dateStr);
+      if (completed) {
+        if (idx === -1) {
+          dates.push(dateStr);
+        }
+      } else {
+        if (idx !== -1) {
+          dates.splice(idx, 1);
+        }
+      }
+
+      await enhancedDb.challenges.update(challenge.id!, {
+        completedDates: dates
+      });
+    }
+  } catch (err) {
+    console.error('Error updating challenge progress:', err);
+  }
 };

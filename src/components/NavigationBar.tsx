@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Home, BarChart3, Trophy, Target, Settings } from 'lucide-react';
+import { Home, BarChart3, Trophy, Target, Settings, Calendar } from 'lucide-react';
 
 export const NavigationBar = () => {
   const location = useLocation();

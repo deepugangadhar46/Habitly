@@ -1,13 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, TrendingUp, Calendar, Target, Award, Lightbulb, BarChart3, Download } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Target, Award, Lightbulb, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { db, getHabitsWithStreaks } from '@/lib/database';
-import { format, subDays } from 'date-fns';
+import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { SmartSuggestions } from '@/components/SmartSuggestions';
 import { MonthlyAnalytics } from '@/components/MonthlyAnalytics';
 
@@ -47,14 +47,13 @@ const Analytics = () => {
       }
       setWeeklyData(weekData);
 
-      // Generate category data from real habits
-      const counts: Record<string, number> = {};
-      for (const h of habitsWithStreaks) {
-        const key = h.category || 'Uncategorized';
-        counts[key] = (counts[key] || 0) + 1;
-      }
-      const colors = ['#3b82f6','#22c55e','#ef4444','#a855f7','#f59e0b','#06b6d4','#84cc16'];
-      const catData = Object.entries(counts).map(([name, value], idx) => ({ name, value, color: colors[idx % colors.length] }));
+      // Generate category data (mock categories for now)
+      const categories = ['Health', 'Productivity', 'Learning', 'Fitness', 'Mindfulness'];
+      const catData = categories.map(cat => ({
+        name: cat,
+        value: Math.floor(Math.random() * habitsWithStreaks.length) + 1,
+        color: `hsl(${Math.random() * 360}, 70%, 50%)`
+      }));
       setCategoryData(catData);
 
       // Generate streak data
@@ -70,35 +69,6 @@ const Analytics = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const exportCSV = async () => {
-    // Build CSV from habits and entries
-    const [habitsList, entries] = await Promise.all([
-      db.habits.toArray(),
-      db.entries.toArray(),
-    ]);
-    const habitNameById = new Map(habitsList.map(h => [h.id!, h.name] as const));
-    const rows = [
-      ['habitId','habitName','date','completed','mood','completedAt'].join(','),
-      ...entries.map(e => [
-        e.habitId,
-        JSON.stringify(habitNameById.get(e.habitId) || ''),
-        e.date,
-        e.completed ? '1' : '0',
-        JSON.stringify(e.mood || ''),
-        e.completedAt ? new Date(e.completedAt).toISOString() : ''
-      ].join(','))
-    ];
-    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `habitly_export_${Date.now()}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   const totalHabits = habits.length;
@@ -134,9 +104,6 @@ const Analytics = () => {
                 <p className="text-muted-foreground">Your habit insights and progress</p>
               </div>
             </div>
-            <Button variant="outline" onClick={exportCSV} className="flex items-center">
-              <Download className="w-4 h-4 mr-2" /> Export CSV
-            </Button>
           </div>
         </div>
       </div>

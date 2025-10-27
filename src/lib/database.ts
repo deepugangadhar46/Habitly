@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie';
+import { checkAchievements, updateChallengesProgressForHabit } from '@/lib/database-enhanced';
 
 export interface Habit {
   id?: number;
@@ -112,11 +113,13 @@ export const toggleHabitCompletion = async (habitId: number, mood?: string) => {
   const existingEntry = await getTodayEntry(habitId);
   
   if (existingEntry) {
+    const newCompleted = !existingEntry.completed;
     await db.entries.update(existingEntry.id!, {
-      completed: !existingEntry.completed,
+      completed: newCompleted,
       mood: mood || existingEntry.mood,
-      completedAt: !existingEntry.completed ? new Date() : undefined
+      completedAt: newCompleted ? new Date() : undefined
     });
+    await updateChallengesProgressForHabit(habitId, newCompleted, today);
   } else {
     await db.entries.add({
       habitId,
@@ -125,5 +128,16 @@ export const toggleHabitCompletion = async (habitId: number, mood?: string) => {
       mood,
       completedAt: new Date()
     });
+    await updateChallengesProgressForHabit(habitId, true, today);
+  }
+  // After updating entries, recompute stats for this habit and check achievements
+  try {
+    const habits = await getHabitsWithStreaks();
+    const h = habits.find(hh => hh.id === habitId);
+    if (h) {
+      await checkAchievements(habitId, h.currentStreak, h.completionRate);
+    }
+  } catch (err) {
+    console.error('Post-toggle achievement check failed:', err);
   }
 };

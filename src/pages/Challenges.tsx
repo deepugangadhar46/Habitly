@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,19 +6,23 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Calendar, Users, Target, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { enhancedDb, Challenge } from '@/lib/database-enhanced';
-import { getHabitsWithStreaks } from '@/lib/database';
 import { format, differenceInDays } from 'date-fns';
+import { useChallenges } from '@/hooks/useChallenges';
 
 const Challenges = () => {
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
-  const [completedChallenges, setCompletedChallenges] = useState<Challenge[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    loading: isLoading,
+    activeChallenges,
+    completedChallenges,
+    enrollChallenge,
+    leaveChallenge,
+    insertChallenge,
+    refresh,
+  } = useChallenges();
 
   useEffect(() => {
-    loadChallenges();
     initializeDefaultChallenges();
-  }, []);
+  }, [refresh]);
 
   const initializeDefaultChallenges = async () => {
     const existingCount = await enhancedDb.challenges.count();
@@ -34,7 +38,9 @@ const Challenges = () => {
         targetDays: 30,
         habitIds: [],
         isActive: true,
-        participants: 1247
+        participants: 1247,
+        isJoined: false,
+        completedDates: []
       },
       {
         name: "Mindful March",
@@ -45,7 +51,9 @@ const Challenges = () => {
         targetDays: 21,
         habitIds: [],
         isActive: true,
-        participants: 892
+        participants: 892,
+        isJoined: false,
+        completedDates: []
       },
       {
         name: "Fitness February",
@@ -56,51 +64,17 @@ const Challenges = () => {
         targetDays: 28,
         habitIds: [],
         isActive: true,
-        participants: 1563
+        participants: 1563,
+        isJoined: false,
+        completedDates: []
       }
     ];
 
     await enhancedDb.challenges.bulkAdd(defaultChallenges);
+    await refresh();
   };
 
-  const loadChallenges = async () => {
-    try {
-      const allChallenges = await enhancedDb.challenges.toArray();
-      setChallenges(allChallenges);
-      
-      const now = new Date();
-      const active = allChallenges.filter(c => c.isActive && c.endDate > now);
-      const completed = allChallenges.filter(c => !c.isActive || c.endDate <= now);
-      
-      setActiveChallenges(active);
-      setCompletedChallenges(completed);
-    } catch (error) {
-      console.error('Error loading challenges:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const joinChallenge = async (challengeId: number) => {
-    try {
-      const challenge = await enhancedDb.challenges.get(challengeId);
-      if (challenge) {
-        await enhancedDb.challenges.update(challengeId, {
-          participants: (challenge.participants || 0) + 1
-        });
-        loadChallenges();
-      }
-    } catch (error) {
-      console.error('Error joining challenge:', error);
-    }
-  };
-
-  const calculateProgress = (challenge: Challenge): number => {
-    const now = new Date();
-    const totalDays = differenceInDays(challenge.endDate, challenge.startDate);
-    const daysPassed = differenceInDays(now, challenge.startDate);
-    return Math.min(Math.max((daysPassed / totalDays) * 100, 0), 100);
-  };
+  const calculateProgress = (challenge: { progressPercent?: number }) => challenge.progressPercent ?? 0;
 
   if (isLoading) {
     return (
@@ -130,7 +104,13 @@ const Challenges = () => {
                 <p className="text-muted-foreground">Join community challenges and stay motivated</p>
               </div>
             </div>
-            <Button className="bg-gradient-primary hover:shadow-glow">
+            <Button className="bg-gradient-primary hover:shadow-glow" onClick={() => insertChallenge({
+              name: 'Custom Challenge',
+              description: 'Your own challenge',
+              emoji: '🚀',
+              targetDays: 14,
+            })}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Create Challenge
             </Button>
@@ -188,13 +168,23 @@ const Challenges = () => {
                         <Target className="w-3 h-3 mr-1" />
                         {challenge.targetDays} days
                       </Badge>
-                      <Button 
-                        size="sm" 
-                        onClick={() => joinChallenge(challenge.id!)}
-                        className="bg-gradient-primary hover:shadow-glow"
-                      >
-                        Join Challenge
-                      </Button>
+                      {challenge.isJoined ? (
+                        <Button 
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => leaveChallenge(challenge.id!)}
+                        >
+                          Joined • Leave
+                        </Button>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          onClick={() => enrollChallenge(challenge.id!)}
+                          className="bg-gradient-primary hover:shadow-glow"
+                        >
+                          Join Challenge
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </Card>
@@ -245,7 +235,12 @@ const Challenges = () => {
           <p className="text-muted-foreground mb-6">
             Design a custom challenge and invite friends to join you!
           </p>
-          <Button className="bg-gradient-primary hover:shadow-glow">
+          <Button className="bg-gradient-primary hover:shadow-glow" onClick={() => insertChallenge({
+            name: 'Custom Challenge',
+            description: 'Your own challenge',
+            emoji: '🚀',
+            targetDays: 14,
+          })}>
             <Plus className="w-4 h-4 mr-2" />
             Create Challenge
           </Button>
