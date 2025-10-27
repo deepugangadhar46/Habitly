@@ -26,8 +26,8 @@ A comprehensive Progressive Web App (PWA) for tracking daily habits with advance
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
-cd habitly
+git clone https://github.com/deepugangadhar46/Habitly.git
+cd Habitly
 ```
 
 2. Install dependencies:
@@ -40,7 +40,7 @@ npm install
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+4. Open your browser and navigate to `http://localhost:8080`
 
 ### Building for Production
 
