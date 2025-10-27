@@ -34,7 +34,9 @@ export const GoalTracker = () => {
       const allGoals = await enhancedDb.goals.toArray();
       setGoals(allGoals);
     } catch (error) {
-      console.error('Error loading goals:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading goals:', error);
+      }
     }
   };
 
@@ -43,7 +45,9 @@ export const GoalTracker = () => {
       const habitsWithStreaks = await getHabitsWithStreaks();
       setHabits(habitsWithStreaks);
     } catch (error) {
-      console.error('Error loading habits:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading habits:', error);
+      }
     }
   };
 
@@ -74,7 +78,9 @@ export const GoalTracker = () => {
       setNewGoal({ habitId: 0, type: 'weekly', target: 7 });
       loadGoals();
     } catch (error) {
-      console.error('Error creating goal:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error creating goal:', error);
+      }
       toast({
         title: "Error",
         description: "Failed to create goal. Please try again.",

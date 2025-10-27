@@ -21,7 +21,9 @@ export const SmartSuggestions = () => {
       const weeklyReport = await generateWeeklyMoodReport();
       setReport(weeklyReport);
     } catch (error) {
-      console.error('Error generating mood report:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error generating mood report:', error);
+      }
     } finally {
       setIsLoading(false);
     }

@@ -64,7 +64,9 @@ export const AddHabitDialog = ({ onHabitAdded }: AddHabitDialogProps) => {
       setOpen(false);
       onHabitAdded();
     } catch (error) {
-      console.error('Error creating habit:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error creating habit:', error);
+      }
       toast({
         title: "Something went wrong",
         description: "Couldn't create your habit. Please try again! 💪",

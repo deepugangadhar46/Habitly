@@ -66,7 +66,9 @@ const Analytics = () => {
       setStreakData(streakInfo);
 
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading analytics:', error);
+      }
     } finally {
       setIsLoading(false);
     }

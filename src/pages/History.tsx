@@ -107,7 +107,9 @@ const History = () => {
     try {
       setIsLoading(true);
       const habitsWithStreaks = await getHabitsWithStreaks();
-      setHabits(habitsWithStreaks);
+      // Filter out habits without IDs and ensure type compatibility
+      const habitsWithIds = habitsWithStreaks.filter(h => h.id !== undefined) as HabitWithStats[];
+      setHabits(habitsWithIds);
 
       const monthStart = startOfMonth(currentMonth);
       const monthEnd = endOfMonth(currentMonth);
@@ -166,7 +168,9 @@ const History = () => {
       setDayEntries(entriesMap);
       await calculateMonthlyAnalytics(entriesMap, habitsWithStreaks);
     } catch (error) {
-      console.error('Error loading history:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading history:', error);
+      }
     } finally {
       setIsLoading(false);
     }

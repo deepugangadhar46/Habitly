@@ -4,6 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Habit, HabitEntry, toggleHabitCompletion } from '@/lib/database';
 import { Check, Flame } from 'lucide-react';
+import { useUndoToast } from '@/hooks/useUndoToast';
+import { scheduleEmotionalNudge, showStreakMilestoneNotification } from '@/lib/notificationService';
+import type { MoodEmoji } from '@/lib/quotes';
+import { getStreakMilestoneQuote } from '@/lib/quoteEngine';
+import { toast } from 'sonner';
 
 interface HabitCardProps {
   habit: Habit & {
@@ -20,17 +25,54 @@ export const HabitCard = ({ habit, todayEntry, onUpdate }: HabitCardProps) => {
   const [showMoodPicker, setShowMoodPicker] = useState(false);
   const [selectedMood, setSelectedMood] = useState(todayEntry?.mood || '😊');
   const [isAnimating, setIsAnimating] = useState(false);
+  const { showUndoToast } = useUndoToast();
 
   const isCompleted = todayEntry?.completed || false;
+  const previousStreak = habit.currentStreak;
 
   const handleComplete = async (mood?: string) => {
     setIsAnimating(true);
+    const wasCompleted = isCompleted;
+    
     try {
       await toggleHabitCompletion(habit.id!, mood);
-      onUpdate();
+      
+      // If marking as complete (not undoing), show undo toast
+      if (!wasCompleted) {
+        const newStreak = habit.currentStreak + 1;
+        
+        // Check for milestone
+        const milestoneQuote = getStreakMilestoneQuote(newStreak);
+        if (milestoneQuote) {
+          toast.success(milestoneQuote, { duration: 5000 });
+          await showStreakMilestoneNotification(habit.name, newStreak);
+        }
+        
+        // Show emotional nudge for negative moods
+        if (mood && (mood === '😔' || mood === '😮‍💨')) {
+          await scheduleEmotionalNudge(habit.name, mood as MoodEmoji);
+        }
+        
+        // Show undo toast
+        showUndoToast({
+          message: `${habit.emoji} ${habit.name} completed!`,
+          onUndo: async () => {
+            await toggleHabitCompletion(habit.id!);
+            onUpdate();
+          },
+          onComplete: () => {
+            onUpdate();
+          },
+        });
+      } else {
+        onUpdate();
+      }
+      
       setTimeout(() => setIsAnimating(false), 400);
     } catch (error) {
-      console.error('Error toggling habit:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error toggling habit:', error);
+      }
       setIsAnimating(false);
     }
   };

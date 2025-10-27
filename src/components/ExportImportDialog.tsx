@@ -54,7 +54,9 @@ export const ExportImportDialog = ({ onImported }: ExportImportDialogProps) => {
         description: "Your habits are safely exported. Keep this file secure! ✨",
       });
     } catch (error) {
-      console.error('Export error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Export error:', error);
+      }
       toast({
         title: "Export failed",
         description: "Couldn't create backup. Please try again! 😔",
@@ -109,7 +111,9 @@ export const ExportImportDialog = ({ onImported }: ExportImportDialogProps) => {
       onImported?.();
       
     } catch (error) {
-      console.error('Import error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Import error:', error);
+      }
       toast({
         title: "Import failed",
         description: "Invalid backup file. Please check the format! 😔",

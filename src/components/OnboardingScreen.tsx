@@ -45,7 +45,9 @@ export const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
       
       onComplete();
     } catch (error) {
-      console.error('Error creating starter habits:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error creating starter habits:', error);
+      }
       toast({
         title: "Oops!",
         description: "Couldn't create habits. Please try again! 💪",

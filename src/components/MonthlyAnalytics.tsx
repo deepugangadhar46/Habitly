@@ -70,7 +70,9 @@ export const MonthlyAnalytics = () => {
       setComparison(comparisonData);
       setHistory(historyData);
     } catch (error) {
-      console.error('Error loading monthly analytics:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading monthly analytics:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +137,9 @@ export const MonthlyAnalytics = () => {
 
       setDayEntries(entriesMap);
     } catch (error) {
-      console.error('Error loading history data:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading history data:', error);
+      }
     }
   };
 

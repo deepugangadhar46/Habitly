@@ -71,7 +71,9 @@ export const EnhancedAddHabitDialog = ({ onHabitAdded }: EnhancedAddHabitDialogP
       setOpen(false);
       resetForm();
     } catch (error) {
-      console.error('Error creating habit:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error creating habit:', error);
+      }
       toast({
         title: "Oops!",
         description: "Couldn't create habit. Please try again!",

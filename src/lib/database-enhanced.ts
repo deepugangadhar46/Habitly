@@ -171,7 +171,9 @@ export const scheduleNotification = async (habitId: number, time: string, messag
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       // Schedule notification logic would go here
-      console.log(`Notification scheduled for habit ${habitId} at ${time}: ${message}`);
+      if (import.meta.env.DEV) {
+        console.log(`Notification scheduled for habit ${habitId} at ${time}: ${message}`);
+      }
     }
   }
 };
@@ -225,6 +227,8 @@ export const updateChallengesProgressForHabit = async (
       });
     }
   } catch (err) {
-    console.error('Error updating challenge progress:', err);
+    if (import.meta.env.DEV) {
+      console.error('Error updating challenge progress:', err);
+    }
   }
 };

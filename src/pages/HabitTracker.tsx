@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { HabitCard } from '@/components/HabitCard';
 import { EnhancedAddHabitDialog } from '@/components/EnhancedAddHabitDialog';
 import { MotivationalMessage } from '@/components/MotivationalMessage';
@@ -8,12 +8,15 @@ import { NavigationBar } from '@/components/NavigationBar';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { GoalTracker } from '@/components/GoalTracker';
 import { Habit, HabitEntry, getHabitsWithStreaks, getTodayEntry } from '@/lib/database';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export const HabitTracker = () => {
   const [habits, setHabits] = useState<(Habit & { currentStreak: number; completionRate: number })[]>([]);
   const [todayEntries, setTodayEntries] = useState<{ [key: number]: HabitEntry }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadHabits = async () => {
     try {
@@ -43,6 +46,19 @@ export const HabitTracker = () => {
   useEffect(() => {
     loadHabits();
   }, []);
+
+  // Filter habits based on search query
+  const filteredHabits = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return habits;
+    }
+    const query = searchQuery.toLowerCase();
+    return habits.filter(habit => 
+      habit.name.toLowerCase().includes(query) ||
+      habit.description?.toLowerCase().includes(query) ||
+      habit.category?.toLowerCase().includes(query)
+    );
+  }, [habits, searchQuery]);
 
   const completedToday = Object.values(todayEntries).filter(entry => entry.completed).length;
   const totalHabits = habits.length;
@@ -94,6 +110,37 @@ export const HabitTracker = () => {
           />
         </div>
 
+        {/* Search Bar */}
+        {habits.length > 0 && (
+          <div className="mb-6 md:mb-8">
+            <div className="relative max-w-md mx-auto md:mx-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search habits..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {searchQuery && (
+              <p className="text-sm text-muted-foreground text-center md:text-left mt-2">
+                {filteredHabits.length} {filteredHabits.length === 1 ? 'habit' : 'habits'} found
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Habits Grid */}
         {habits.length === 0 ? (
           <div className="text-center py-12 md:py-16 px-4">
@@ -106,9 +153,22 @@ export const HabitTracker = () => {
             </p>
             <EnhancedAddHabitDialog onHabitAdded={loadHabits} />
           </div>
+        ) : filteredHabits.length === 0 && searchQuery ? (
+          <div className="text-center py-12 md:py-16 px-4">
+            <div className="text-5xl md:text-6xl mb-4">🔍</div>
+            <h2 className="text-xl md:text-2xl font-semibold mb-2 text-foreground">
+              No habits found
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground mb-6">
+              Try a different search term
+            </p>
+            <Button variant="outline" onClick={() => setSearchQuery('')}>
+              Clear search
+            </Button>
+          </div>
         ) : (
           <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {habits.map((habit) => (
+            {filteredHabits.map((habit) => (
               <HabitCard
                 key={habit.id}
                 habit={habit}

@@ -14,12 +14,16 @@ class NotificationManager {
 
   async requestPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
-      console.warn('This browser does not support notifications');
+      if (import.meta.env.DEV) {
+        console.warn('This browser does not support notifications');
+      }
       return false;
     }
 
     if (!('serviceWorker' in navigator)) {
-      console.warn('This browser does not support service workers');
+      if (import.meta.env.DEV) {
+        console.warn('This browser does not support service workers');
+      }
       return false;
     }
 
@@ -64,7 +68,9 @@ class NotificationManager {
 
       return true;
     } catch (error) {
-      console.error('Failed to schedule notification:', error);
+      if (import.meta.env.DEV) {
+        console.error('Failed to schedule notification:', error);
+      }
       return false;
     }
   }
@@ -87,7 +93,9 @@ class NotificationManager {
         }
       });
     } catch (error) {
-      console.error('Failed to show notification:', error);
+      if (import.meta.env.DEV) {
+        console.error('Failed to show notification:', error);
+      }
     }
   }
 
