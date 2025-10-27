@@ -11,6 +11,7 @@ import { Habit, HabitEntry, getHabitsWithStreaks, getTodayEntry } from '@/lib/da
 import { Loader2, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { HabitCardSkeletonGrid } from '@/components/HabitCardSkeleton';
 
 export const HabitTracker = () => {
   const [habits, setHabits] = useState<(Habit & { currentStreak: number; completionRate: number })[]>([]);
@@ -66,11 +67,25 @@ export const HabitTracker = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-          <p className="text-muted-foreground">Loading your habits...</p>
+      <div className="min-h-screen bg-background pb-20">
+        <div className="bg-gradient-warm shadow-soft">
+          <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1 md:mb-2">
+                  Your Daily Habits ✨
+                </h1>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  Building better habits, one day at a time
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+          <HabitCardSkeletonGrid count={6} />
+        </div>
+        <NavigationBar />
       </div>
     );
   }
