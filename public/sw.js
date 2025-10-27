@@ -1,27 +1,79 @@
-// Enhanced Service Worker for Habitly PWA
-const CACHE_NAME = 'habitly-v2';
-const urlsToCache = [
-  '/',
-  '/src/main.tsx',
-  '/src/index.css',
-  '/favicon.ico',
-  '/manifest.json'
-];
+// Enhanced Service Worker for Habitly PWA - Full Offline Support
+const CACHE_NAME = 'habitly-v3';
+const RUNTIME_CACHE = 'habitly-runtime-v3';
 
+// Install event - skip waiting to activate immediately
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) => {
+      // Cache critical assets
+      return cache.addAll([
+        '/',
+        '/manifest.json',
+        '/icon-192.png',
+        '/icon-512.png'
+      ]).catch(err => {
+        console.log('Cache addAll error:', err);
+      });
+    })
   );
 });
 
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// Fetch event - Cache-first strategy for assets, Network-first for API
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip cross-origin requests
+  if (url.origin !== location.origin) {
+    return;
+  }
+
+  // Cache-first strategy for all same-origin requests
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      })
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(request).then((response) => {
+        // Don't cache non-successful responses
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+
+        // Clone the response before caching
+        const responseToCache = response.clone();
+
+        caches.open(RUNTIME_CACHE).then((cache) => {
+          cache.put(request, responseToCache);
+        });
+
+        return response;
+      }).catch(() => {
+        // Return offline page or cached index for navigation requests
+        if (request.mode === 'navigate') {
+          return caches.match('/');
+        }
+        return new Response('Offline', { status: 503 });
+      });
+    })
   );
 });
 
