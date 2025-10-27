@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate PWA Icons</title>
+  <style>
+    body { font-family: system-ui; padding: 40px; max-width: 600px; margin: 0 auto; }
+    canvas { border: 1px solid #ddd; margin: 20px 0; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px 5px; }
+  </style>
+</head>
+<body>
+  <h1>Habitly PWA Icon Generator</h1>
+  <p>Click buttons below to generate and download PWA icons:</p>
+  
+  <canvas id="canvas192" width="192" height="192"></canvas>
+  <button onclick="generateIcon(192)">Generate 192x192</button>
+  <button onclick="downloadIcon(192)">Download 192x192</button>
+  
+  <canvas id="canvas512" width="512" height="512"></canvas>
+  <button onclick="generateIcon(512)">Generate 512x512</button>
+  <button onclick="downloadIcon(512)">Download 512x512</button>
+  
+  <script>
+    function generateIcon(size) {
+      const canvas = document.getElementById(`canvas${size}`);
+      const ctx = canvas.getContext('2d');
+      
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#FF6B5A');
+      gradient.addColorStop(1, '#FF8A7A');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+      
+      // Add rounded corners
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.beginPath();
+      const radius = size * 0.2;
+      ctx.roundRect(0, 0, size, size, radius);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      
+      // Draw checkmark
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = size * 0.08;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      ctx.beginPath();
+      ctx.moveTo(size * 0.25, size * 0.5);
+      ctx.lineTo(size * 0.4, size * 0.65);
+      ctx.lineTo(size * 0.75, size * 0.35);
+      ctx.stroke();
+      
+      // Add subtle shadow
+      ctx.shadowColor = 'rgba(0,0,0,0.2)';
+      ctx.shadowBlur = size * 0.02;
+      ctx.shadowOffsetY = size * 0.01;
+    }
+    
+    function downloadIcon(size) {
+      const canvas = document.getElementById(`canvas${size}`);
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `icon-${size}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+    
+    // Generate on load
+    generateIcon(192);
+    generateIcon(512);
+  </script>
+</body>
+</html>

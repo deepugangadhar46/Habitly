@@ -12,6 +12,9 @@ export interface Habit {
   createdAt: Date;
   isActive: boolean;
   notes?: string;
+  reminderTime?: string; // "09:00", "14:30"
+  reminderDays?: number[]; // [0,1,2,3,4,5,6] for days of week (0 = Sunday)
+  reminderEnabled?: boolean;
 }
 
 export interface HabitEntry {
@@ -138,6 +141,8 @@ export const toggleHabitCompletion = async (habitId: number, mood?: string) => {
       await checkAchievements(habitId, h.currentStreak, h.completionRate);
     }
   } catch (err) {
-    console.error('Post-toggle achievement check failed:', err);
+    if (import.meta.env.DEV) {
+      console.error('Post-toggle achievement check failed:', err);
+    }
   }
 };

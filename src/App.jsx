@@ -9,7 +9,6 @@ import Analytics from "./pages/Analytics";
 import Achievements from "./pages/Achievements";
 import Settings from "./pages/Settings";
 import Challenges from "./pages/Challenges";
-import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,7 +23,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/analytics" element={<Analytics />} />
-            <Route path="/history" element={<History />} />
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/settings" element={<Settings />} />

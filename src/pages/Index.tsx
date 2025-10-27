@@ -12,7 +12,9 @@ const Index = () => {
         const habitCount = await db.habits.count();
         setShowOnboarding(habitCount === 0);
       } catch (error) {
-        console.error('Error checking habits:', error);
+        if (import.meta.env.DEV) {
+          console.error('Error checking habits:', error);
+        }
         setShowOnboarding(true);
       }
     };

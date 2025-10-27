@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { HabitCard } from '@/components/HabitCard';
 import { EnhancedAddHabitDialog } from '@/components/EnhancedAddHabitDialog';
 import { MotivationalMessage } from '@/components/MotivationalMessage';
+import MotivationQuote from '@/components/MotivationQuote';
 import { ExportImportDialog } from '@/components/ExportImportDialog';
 import { NavigationBar } from '@/components/NavigationBar';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
@@ -31,7 +32,9 @@ export const HabitTracker = () => {
       }
       setTodayEntries(entries);
     } catch (error) {
-      console.error('Error loading habits:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading habits:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -60,17 +63,17 @@ export const HabitTracker = () => {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-gradient-warm shadow-soft">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1 md:mb-2">
                 Your Daily Habits ✨
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Building better habits, one day at a time
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4 self-end sm:self-auto">
               <EnhancedAddHabitDialog onHabitAdded={loadHabits} />
               <ExportImportDialog onImported={loadHabits} />
             </div>
@@ -78,9 +81,12 @@ export const HabitTracker = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+        {/* Motivational Quote */}
+        <MotivationQuote />
+        
         {/* Motivational Message */}
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <MotivationalMessage
             totalHabits={totalHabits}
             completedToday={completedToday}
@@ -90,18 +96,18 @@ export const HabitTracker = () => {
 
         {/* Habits Grid */}
         {habits.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">🌱</div>
-            <h2 className="text-2xl font-semibold mb-2 text-foreground">
+          <div className="text-center py-12 md:py-16 px-4">
+            <div className="text-5xl md:text-6xl mb-4">🌱</div>
+            <h2 className="text-xl md:text-2xl font-semibold mb-2 text-foreground">
               Ready to start your journey?
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm md:text-base text-muted-foreground mb-6">
               Create your first habit and let's build something amazing together!
             </p>
             <EnhancedAddHabitDialog onHabitAdded={loadHabits} />
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {habits.map((habit) => (
               <HabitCard
                 key={habit.id}
@@ -114,7 +120,7 @@ export const HabitTracker = () => {
         )}
 
         {/* Goals Section */}
-        <div className="mt-12">
+        <div className="mt-8 md:mt-12">
           <GoalTracker />
         </div>
       </div>
