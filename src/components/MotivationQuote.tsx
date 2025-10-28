@@ -27,12 +27,12 @@ export default function MotivationQuote() {
   }, []);
 
   return (
-    <div className="space-y-3 py-4 px-4 md:px-6 dark:bg-gray-900/50 rounded-lg">
-      <div className="flex items-center justify-center gap-2 text-sm md:text-base font-medium text-foreground dark:text-gray-100">
-        <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary dark:text-primary-400" />
+    <div className="space-y-3 py-4 px-4 md:px-6 bg-muted/30 rounded-lg">
+      <div className="flex items-center justify-center gap-2 text-sm md:text-base font-medium text-foreground">
+        <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary" />
         <p>{greeting}</p>
       </div>
-      <p className="text-center text-sm md:text-base italic text-muted-foreground dark:text-gray-300 transition-all duration-500">
+      <p className="text-center text-sm md:text-base italic text-muted-foreground transition-all duration-500">
         "{quote}"
       </p>
     </div>

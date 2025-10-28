@@ -97,7 +97,6 @@ export const HabitCard = ({ habit, todayEntry, onUpdate }: HabitCardProps) => {
       relative overflow-hidden transition-all duration-300 hover:shadow-warm
       ${isCompleted ? 'bg-gradient-success' : 'bg-gradient-glass'}
       ${isAnimating ? 'scale-105' : 'scale-100'}
-      dark:bg-gray-900 dark:border-gray-700
     `}>
       <div className="p-6">
         {/* Header */}

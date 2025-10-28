@@ -165,15 +165,15 @@ export const MonthlyAnalytics = () => {
   if (!comparison) return null;
 
   const getTrendIcon = (value: number) => {
-    if (value > 0) return <TrendingUp className="w-4 h-4 text-green-500" />;
-    if (value < 0) return <TrendingDown className="w-4 h-4 text-red-500" />;
-    return <Minus className="w-4 h-4 text-gray-500" />;
+    if (value > 0) return <TrendingUp className="w-4 h-4 text-success" />;
+    if (value < 0) return <TrendingDown className="w-4 h-4 text-destructive" />;
+    return <Minus className="w-4 h-4 text-muted-foreground" />;
   };
 
   const getTrendColor = (value: number) => {
-    if (value > 0) return 'text-green-500';
-    if (value < 0) return 'text-red-500';
-    return 'text-gray-500';
+    if (value > 0) return 'text-success';
+    if (value < 0) return 'text-destructive';
+    return 'text-muted-foreground';
   };
 
   const getMoodEmoji = (mood: number) => {

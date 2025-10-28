@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export const HabitCardSkeleton = () => {
   return (
-    <Card className="p-6 dark:bg-gray-900 dark:border-gray-700">
+    <Card className="p-6">
       <div className="space-y-4">
         {/* Header with emoji and name */}
         <div className="flex items-start justify-between">

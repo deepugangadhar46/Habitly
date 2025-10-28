@@ -100,9 +100,9 @@ export const EnhancedAddHabitDialog = ({ onHabitAdded }: EnhancedAddHabitDialogP
   };
 
   const difficultyColors = {
-    easy: 'bg-green-100 text-green-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    hard: 'bg-red-100 text-red-800'
+    easy: 'bg-success/20 text-success',
+    medium: 'bg-warning/20 text-warning',
+    hard: 'bg-destructive/20 text-destructive'
   };
 
   return (

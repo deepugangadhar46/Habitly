@@ -62,9 +62,9 @@ export const SmartSuggestions = () => {
   }
 
   const getMoodColor = (mood: number) => {
-    if (mood >= 4) return 'text-green-500';
-    if (mood >= 3) return 'text-yellow-500';
-    return 'text-red-500';
+    if (mood >= 4) return 'text-success';
+    if (mood >= 3) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getMoodEmoji = (mood: number) => {
@@ -102,14 +102,14 @@ export const SmartSuggestions = () => {
       {report.bestHabits.length > 0 && (
         <Card className="p-6">
           <div className="flex items-center space-x-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-green-500" />
+            <TrendingUp className="w-5 h-5 text-success" />
             <h4 className="font-semibold">Top Mood Boosters</h4>
           </div>
           <div className="space-y-3">
             {report.bestHabits.map((habit) => (
               <div
                 key={habit.habitId}
-                className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg border border-green-500/20"
+                className="flex items-center justify-between p-3 bg-success/10 rounded-lg border border-success/20"
               >
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">{habit.habitEmoji}</span>
@@ -120,7 +120,7 @@ export const SmartSuggestions = () => {
                     </p>
                   </div>
                 </div>
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
+                <Badge variant="outline" className="bg-success/10 text-success border-success/30">
                   {habit.averageMood.toFixed(1)} {getMoodEmoji(habit.averageMood)}
                 </Badge>
               </div>
