@@ -63,6 +63,14 @@ export const useHabits = () => {
     await refresh();
   }, [refresh]);
 
+  const deleteHabit = useCallback(async (habitId: number) => {
+    // Delete all entries for this habit first
+    await db.entries.where('habitId').equals(habitId).delete();
+    // Then delete the habit
+    await db.habits.delete(habitId);
+    await refresh();
+  }, [refresh]);
+
   const completeHabit = useCallback(async (habitId: number, mood?: string) => {
     await toggleHabitCompletion(habitId, mood);
     await refresh();
@@ -86,6 +94,7 @@ export const useHabits = () => {
     insertHabit,
     duplicateHabit,
     archiveHabit,
+    deleteHabit,
     completeHabit,
     updateCompletionMood,
   };

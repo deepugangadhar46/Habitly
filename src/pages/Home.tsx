@@ -1,14 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ArrowLeft, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useHabits } from '@/hooks/useHabits';
 import { HabitCard } from '@/components/HabitCard';
 import { EnhancedAddHabitDialog } from '@/components/EnhancedAddHabitDialog';
+import { SmartInsights } from '@/components/SmartInsights';
+import { useToast } from '@/hooks/use-toast';
 
 const Home = () => {
+  const [habitToDelete, setHabitToDelete] = useState<number | null>(null);
   const {
     loading,
     habits,
@@ -16,12 +20,24 @@ const Home = () => {
     insertHabit,
     duplicateHabit,
     archiveHabit,
+    deleteHabit,
     completeHabit,
     updateCompletionMood,
     refresh,
   } = useHabits();
+  const { toast } = useToast();
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  const handleDelete = async () => {
+    if (!habitToDelete) return;
+    await deleteHabit(habitToDelete);
+    setHabitToDelete(null);
+    toast({
+      title: "Habit deleted",
+      description: "The habit and all its data have been permanently removed.",
+    });
+  };
 
   if (loading) {
     return (
@@ -72,9 +88,52 @@ const Home = () => {
                   todayEntry={todayEntries[h.id!]}
                   onUpdate={refresh}
                 />
-                <div className="flex items-center justify-end gap-2">
-                  <Button size="sm" variant="outline" onClick={() => duplicateHabit(h.id!)}>Duplicate</Button>
-                  <Button size="sm" variant="ghost" onClick={() => archiveHabit(h.id!)}>Retire</Button>
+                {h.id && <SmartInsights habitId={h.id} habitName={h.name} />}
+                <div className="flex items-center justify-end gap-2 p-2 border border-border rounded-lg bg-card">
+                  <Button size="sm" variant="outline" onClick={() => duplicateHabit(h.id!)}>
+                    <span className="text-xs">Duplicate</span>
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => archiveHabit(h.id!)}>
+                    <span className="text-xs">Retire</span>
+                  </Button>
+                  <AlertDialog open={habitToDelete === h.id} onOpenChange={(open) => !open && setHabitToDelete(null)}>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        size="sm" 
+                        variant="destructive" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setHabitToDelete(h.id!);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        <span className="text-xs">Delete</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center space-x-2">
+                          <AlertCircle className="w-5 h-5 text-destructive" />
+                          <span>Delete Habit?</span>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{h.name}"? This action cannot be undone and will permanently delete all completion history for this habit.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setHabitToDelete(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => {
+                            handleDelete();
+                            setHabitToDelete(null);
+                          }} 
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete Permanently
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}

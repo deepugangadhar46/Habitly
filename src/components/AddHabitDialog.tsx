@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { db } from '@/lib/database';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { generateMotivation } from '@/ai/generateMotivation';
 
 interface AddHabitDialogProps {
   onHabitAdded: () => void;
@@ -55,10 +56,29 @@ export const AddHabitDialog = ({ onHabitAdded }: AddHabitDialogProps) => {
         isActive: true
       });
       
-      toast({
-        title: "Habit Created! 🎉",
-        description: `Welcome to your journey with "${name}"! Let's make it happen! ✨`,
-      });
+      // Generate AI motivation message
+      try {
+        const motivation = await generateMotivation(name.trim(), 'General');
+        if (motivation) {
+          toast({
+            title: "Habit Created! 🎉",
+            description: motivation,
+          });
+        } else {
+          toast({
+            title: "Habit Created! 🎉",
+            description: `Welcome to your journey with "${name}"! Let's make it happen! ✨`,
+          });
+        }
+      } catch (motivationError) {
+        if (import.meta.env.DEV) {
+          console.error('Error generating motivation:', motivationError);
+        }
+        toast({
+          title: "Habit Created! 🎉",
+          description: `Welcome to your journey with "${name}"! Let's make it happen! ✨`,
+        });
+      }
       
       resetForm();
       setOpen(false);

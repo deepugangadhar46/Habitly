@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Habit, HabitEntry, toggleHabitCompletion } from '@/lib/database';
-import { Check, Flame } from 'lucide-react';
+import { Habit, HabitEntry, toggleHabitCompletion, db } from '@/lib/database';
+import { Check, Flame, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useUndoToast } from '@/hooks/useUndoToast';
 import { scheduleEmotionalNudge, showStreakMilestoneNotification } from '@/lib/notificationService';
 import type { MoodEmoji } from '@/lib/quotes';
@@ -80,16 +81,30 @@ export const HabitCard = ({ habit, todayEntry, onUpdate }: HabitCardProps) => {
 
   const handleQuickComplete = () => {
     if (isCompleted) {
-      handleComplete();
-    } else {
-      setShowMoodPicker(true);
+      // Already completed today; do not toggle back to incomplete
+      toast.info('Already marked as done today');
+      return;
     }
+    setShowMoodPicker(true);
   };
 
   const handleMoodSelect = (mood: string) => {
     setSelectedMood(mood);
     handleComplete(mood);
     setShowMoodPicker(false);
+  };
+
+  const handleDeleteHabit = async () => {
+    try {
+      await db.habits.delete(habit.id!);
+      toast.success('Habit deleted successfully');
+      onUpdate();
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Error deleting habit:', error);
+      }
+      toast.error('Failed to delete habit');
+    }
   };
 
   return (
@@ -111,12 +126,39 @@ export const HabitCard = ({ habit, todayEntry, onUpdate }: HabitCardProps) => {
             </div>
           </div>
           
-          {habit.currentStreak > 0 && (
-            <Badge variant="secondary" className="flex items-center space-x-1">
-              <Flame className="w-3 h-3 text-accent" />
-              <span>{habit.currentStreak}</span>
-            </Badge>
-          )}
+          <div className="flex items-center space-x-2">
+            {habit.currentStreak > 0 && (
+              <Badge variant="secondary" className="flex items-center space-x-1">
+                <Flame className="w-3 h-3 text-accent" />
+                <span>{habit.currentStreak}</span>
+              </Badge>
+            )}
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="destructive">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Habit?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{habit.name}"? This will remove all completion history and cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteHabit}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Progress Stats */}
@@ -147,7 +189,7 @@ export const HabitCard = ({ habit, todayEntry, onUpdate }: HabitCardProps) => {
                 : 'bg-gradient-primary hover:shadow-glow'
               }
             `}
-            disabled={isAnimating}
+            disabled={isAnimating || isCompleted}
           >
             {isCompleted ? (
               <div className="flex items-center space-x-2">

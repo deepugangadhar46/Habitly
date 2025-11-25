@@ -9,8 +9,7 @@ import { ArrowLeft, Bell, Moon, Sun, Download, Upload, Trash2 } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/database';
-import { enhancedDb } from '@/lib/database-enhanced';
+import { db, resetAllData } from '@/lib/database';
 
 const Settings = () => {
   const [notifications, setNotifications] = useState(false);
@@ -114,10 +113,7 @@ const Settings = () => {
   const clearAllData = async () => {
     if (window.confirm('Are you sure you want to delete ALL your habit data? This cannot be undone!')) {
       try {
-        await db.habits.clear();
-        await db.entries.clear();
-        await enhancedDb.achievements.clear();
-        await enhancedDb.challenges.clear();
+        await resetAllData();
         
         localStorage.removeItem('habitly-settings');
         

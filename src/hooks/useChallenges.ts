@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { enhancedDb, Challenge } from '@/lib/database-enhanced';
+import { db, Challenge } from '@/lib/database';
 
 export type ChallengeWithProgress = Challenge & {
   progressPercent: number;
@@ -25,7 +25,7 @@ export const useChallenges = () => {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const all = await enhancedDb.challenges.toArray();
+    const all = await db.challenges.toArray();
     setChallenges(all.map(computeProgress));
     setLoading(false);
   }, [computeProgress]);
@@ -33,16 +33,16 @@ export const useChallenges = () => {
   useEffect(() => { refresh(); }, [refresh]);
 
   const enrollChallenge = useCallback(async (challengeId: number) => {
-    const c = await enhancedDb.challenges.get(challengeId);
+    const c = await db.challenges.get(challengeId);
     if (!c) return;
     const updates: Partial<Challenge> = { isJoined: true };
     if (!c.isJoined) updates.participants = (c.participants || 0) + 1;
-    await enhancedDb.challenges.update(challengeId, updates);
+    await db.challenges.update(challengeId, updates);
     await refresh();
   }, [refresh]);
 
   const leaveChallenge = useCallback(async (challengeId: number) => {
-    await enhancedDb.challenges.update(challengeId, { isJoined: false });
+    await db.challenges.update(challengeId, { isJoined: false });
     await refresh();
   }, [refresh]);
 
@@ -62,7 +62,7 @@ export const useChallenges = () => {
       isJoined: true,
       completedDates: [],
     };
-    await enhancedDb.challenges.add(c);
+    await db.challenges.add(c);
     await refresh();
   }, [refresh]);
 

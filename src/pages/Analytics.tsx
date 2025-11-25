@@ -10,6 +10,8 @@ import { db, getHabitsWithStreaks } from '@/lib/database';
 import { format, subDays } from 'date-fns';
 import { SmartSuggestions } from '@/components/SmartSuggestions';
 import { MonthlyAnalytics } from '@/components/MonthlyAnalytics';
+import { HabitStreaksVisualization } from '@/components/HabitStreaksVisualization';
+import { MoodTrendReports } from '@/components/MoodTrendReports';
 
 const Analytics = () => {
   const [habits, setHabits] = useState<any[]>([]);
@@ -145,18 +147,31 @@ const Analytics = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="overview" className="flex items-center space-x-2">
+          <TabsList className="grid w-full grid-cols-5 mb-8 overflow-x-auto">
+            <TabsTrigger value="overview" className="flex items-center space-x-2 text-xs md:text-sm">
               <BarChart3 className="w-4 h-4" />
-              <span>Overview</span>
+              <span className="hidden md:inline">Overview</span>
+              <span className="md:hidden">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="monthly" className="flex items-center space-x-2">
-              <Calendar className="w-4 h-4" />
-              <span>Monthly</span>
+            <TabsTrigger value="streaks" className="flex items-center space-x-2 text-xs md:text-sm">
+              <Award className="w-4 h-4" />
+              <span className="hidden md:inline">Streaks</span>
+              <span className="md:hidden">Streaks</span>
             </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center space-x-2">
+            <TabsTrigger value="moods" className="flex items-center space-x-2 text-xs md:text-sm">
               <Lightbulb className="w-4 h-4" />
-              <span>Insights</span>
+              <span className="hidden md:inline">Moods</span>
+              <span className="md:hidden">Moods</span>
+            </TabsTrigger>
+            <TabsTrigger value="monthly" className="flex items-center space-x-2 text-xs md:text-sm">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden md:inline">Monthly</span>
+              <span className="md:hidden">Monthly</span>
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="flex items-center space-x-2 text-xs md:text-sm">
+              <Lightbulb className="w-4 h-4" />
+              <span className="hidden md:inline">Suggestions</span>
+              <span className="md:hidden">Tips</span>
             </TabsTrigger>
           </TabsList>
 
@@ -205,10 +220,10 @@ const Analytics = () => {
             </div>
 
             {/* Charts */}
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-4 md:gap-8">
           {/* Weekly Progress */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Weekly Progress</h3>
+          <Card className="p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold mb-4">Weekly Progress</h3>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={weeklyData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -221,8 +236,8 @@ const Analytics = () => {
           </Card>
 
           {/* Habit Streaks */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Current Streaks</h3>
+          <Card className="p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold mb-4">Current Streaks</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={streakData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -236,8 +251,8 @@ const Analytics = () => {
             </div>
 
             {/* Habit Performance */}
-            <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Habit Performance</h3>
+            <Card className="p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-4">Habit Performance</h3>
           <div className="space-y-4">
             {habits.map((habit) => (
               <div key={habit.id} className="flex items-center justify-between p-4 bg-secondary/20 rounded-lg">
@@ -259,6 +274,14 @@ const Analytics = () => {
             ))}
           </div>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="streaks">
+            <HabitStreaksVisualization />
+          </TabsContent>
+
+          <TabsContent value="moods">
+            <MoodTrendReports />
           </TabsContent>
 
           <TabsContent value="monthly">

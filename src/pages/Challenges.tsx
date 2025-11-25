@@ -1,15 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Calendar, Users, Target, Plus } from 'lucide-react';
+import { ArrowLeft, Calendar, Users, Target, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { enhancedDb, Challenge } from '@/lib/database-enhanced';
+import { db } from '@/lib/database';
 import { format, differenceInDays } from 'date-fns';
 import { useChallenges } from '@/hooks/useChallenges';
+import { CreateChallengeDialog } from '@/components/CreateChallengeDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const Challenges = () => {
+  const [editingChallenge, setEditingChallenge] = useState<any>(null);
+  const [deletingChallengeId, setDeletingChallengeId] = useState<number | null>(null);
+  const { toast } = useToast();
+  
   const {
     loading: isLoading,
     activeChallenges,
@@ -25,10 +32,10 @@ const Challenges = () => {
   }, [refresh]);
 
   const initializeDefaultChallenges = async () => {
-    const existingCount = await enhancedDb.challenges.count();
+    const existingCount = await db.challenges.count();
     if (existingCount > 0) return;
 
-    const defaultChallenges: Challenge[] = [
+    const defaultChallenges: any[] = [
       {
         name: "New Year, New Me",
         description: "Complete any 3 habits for 30 days straight",
@@ -70,11 +77,31 @@ const Challenges = () => {
       }
     ];
 
-    await enhancedDb.challenges.bulkAdd(defaultChallenges);
+    await db.challenges.bulkAdd(defaultChallenges);
     await refresh();
   };
 
   const calculateProgress = (challenge: { progressPercent?: number }) => challenge.progressPercent ?? 0;
+  
+  const handleDeleteChallenge = async (challengeId: number) => {
+    try {
+      await db.challenges.delete(challengeId);
+      toast({
+        title: "Challenge deleted",
+        description: "The challenge has been permanently removed.",
+      });
+      await refresh();
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Error deleting challenge:', error);
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete challenge. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -104,16 +131,7 @@ const Challenges = () => {
                 <p className="text-muted-foreground">Join community challenges and stay motivated</p>
               </div>
             </div>
-            <Button className="bg-gradient-primary hover:shadow-glow" onClick={() => insertChallenge({
-              name: 'Custom Challenge',
-              description: 'Your own challenge',
-              emoji: '🚀',
-              targetDays: 14,
-            })}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Challenge
-            </Button>
+            <CreateChallengeDialog />
           </div>
         </div>
       </div>
@@ -168,23 +186,65 @@ const Challenges = () => {
                         <Target className="w-3 h-3 mr-1" />
                         {challenge.targetDays} days
                       </Badge>
-                      {challenge.isJoined ? (
-                        <Button 
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => leaveChallenge(challenge.id!)}
-                        >
-                          Joined • Leave
-                        </Button>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          onClick={() => enrollChallenge(challenge.id!)}
-                          className="bg-gradient-primary hover:shadow-glow"
-                        >
-                          Join Challenge
-                        </Button>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        {challenge.isJoined ? (
+                          <Button 
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => leaveChallenge(challenge.id!)}
+                          >
+                            Joined • Leave
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm" 
+                            onClick={() => enrollChallenge(challenge.id!)}
+                            className="bg-gradient-primary hover:shadow-glow"
+                          >
+                            Join Challenge
+                          </Button>
+                        )}
+                        {challenge.name !== 'New Year, New Me' && 
+                         challenge.name !== 'Mindful March' && 
+                         challenge.name !== 'Fitness February' && (
+                          <AlertDialog open={deletingChallengeId === challenge.id} onOpenChange={(open) => !open && setDeletingChallengeId(null)}>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                size="sm"
+                                variant="destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeletingChallengeId(challenge.id!);
+                                }}
+                                className="hover:bg-destructive/90"
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                <span className="text-xs">Delete</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Challenge?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{challenge.name}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => setDeletingChallengeId(null)}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => {
+                                    handleDeleteChallenge(challenge.id!);
+                                    setDeletingChallengeId(null);
+                                  }}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Card>

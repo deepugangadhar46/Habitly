@@ -7,14 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Target, Plus, Calendar, TrendingUp } from 'lucide-react';
-import { enhancedDb, Goal } from '@/lib/database-enhanced';
-import { getHabitsWithStreaks } from '@/lib/database';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Target, Plus, Calendar, TrendingUp, Trash2 } from 'lucide-react';
+import { db, getHabitsWithStreaks, Goal, createGoal as dbCreateGoal, deleteGoal as dbDeleteGoal, getGoalProgress } from '@/lib/database';
 import { useToast } from '@/hooks/use-toast';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, isSameWeek, isSameMonth, parseISO } from 'date-fns';
 
-export const GoalTracker = () => {
-  const [goals, setGoals] = useState<Goal[]>([]);
+interface GoalWithProgress extends Goal {
+  currentProgress: number;
+  totalDays: number;
+}
+
+// COMMENTED OUT - Goal feature disabled for now, will revisit later
+// export const GoalTracker = () => {
+const GoalTracker = () => {
+  const [goals, setGoals] = useState<GoalWithProgress[]>([]);
   const [habits, setHabits] = useState<any[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newGoal, setNewGoal] = useState({
@@ -27,15 +34,117 @@ export const GoalTracker = () => {
   useEffect(() => {
     loadGoals();
     loadHabits();
+    
+    // Subscribe to storage changes to refresh when habit is marked as done
+    const interval = setInterval(() => {
+      if (import.meta.env.DEV) {
+        console.log('🔄 Refreshing goals...');
+      }
+      loadGoals();
+    }, 500); // Check every 500ms for faster updates
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadGoals = async () => {
     try {
-      const allGoals = await enhancedDb.goals.toArray();
-      setGoals(allGoals);
+      const allGoals = await db.goals.toArray();
+      const allEntries = await db.entries.toArray();
+      
+      if (import.meta.env.DEV) {
+        console.log('📊 Loading goals:', {
+          totalGoals: allGoals.length,
+          totalEntries: allEntries.length,
+          completedEntries: allEntries.filter(e => e.completed).length
+        });
+      }
+      
+      const goalsWithProgress: GoalWithProgress[] = allGoals.map(goal => {
+        let completedDays = 0;
+        const totalDays = goal.target;
+        
+        try {
+          // Find all COMPLETED entries for this specific habit
+          const habitEntries = allEntries.filter(e => {
+            return e.habitId === goal.habitId && e.completed === true;
+          });
+          
+          if (import.meta.env.DEV) {
+            console.log(`📌 Goal for habit ${goal.habitId}:`, {
+              habitId: goal.habitId,
+              completedEntries: habitEntries.length,
+              period: goal.period,
+              type: goal.type,
+              target: goal.target
+            });
+          }
+          
+          // Filter entries based on the goal period
+          if (goal.type === 'weekly') {
+            const periodStart = parseISO(goal.period);
+            const periodEnd = endOfWeek(periodStart, { weekStartsOn: 1 });
+            
+            const filteredEntries = habitEntries.filter(e => {
+              try {
+                const entryDate = parseISO(e.date);
+                return entryDate >= periodStart && entryDate <= periodEnd;
+              } catch {
+                return false;
+              }
+            });
+            
+            // Count unique dates (one per day max)
+            const uniqueDates = new Set(filteredEntries.map(e => e.date));
+            completedDays = uniqueDates.size;
+            
+            if (import.meta.env.DEV) {
+              console.log(`✅ Weekly goal - Period: ${goal.period} to ${format(periodEnd, 'yyyy-MM-dd')}, Completed days: ${completedDays}`);
+            }
+          } else if (goal.type === 'monthly') {
+            // Parse YYYY-MM format
+            const parts = goal.period.split('-');
+            if (parts.length >= 2) {
+              const year = parseInt(parts[0]);
+              const month = parseInt(parts[1]);
+              const periodStart = new Date(year, month - 1, 1);
+              const periodEnd = new Date(year, month, 0);
+              
+              const filteredEntries = habitEntries.filter(e => {
+                try {
+                  const entryDate = parseISO(e.date);
+                  return entryDate >= periodStart && entryDate <= periodEnd;
+                } catch {
+                  return false;
+                }
+              });
+              
+              // Count unique dates (one per day max)
+              const uniqueDates = new Set(filteredEntries.map(e => e.date));
+              completedDays = uniqueDates.size;
+              
+              if (import.meta.env.DEV) {
+                console.log(`📅 Monthly goal - Period: ${goal.period}, Completed days: ${completedDays}`);
+              }
+            }
+          }
+        } catch (e) {
+          if (import.meta.env.DEV) {
+            console.error(`Error processing goal for habit ${goal.habitId}:`, e);
+          }
+          completedDays = 0;
+        }
+        
+        return {
+          ...goal,
+          currentProgress: completedDays,
+          totalDays: totalDays
+        };
+      });
+      
+      setGoals(goalsWithProgress);
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('Error loading goals:', error);
+        console.error('❌ Error loading goals:', error);
       }
     }
   };
@@ -56,18 +165,16 @@ export const GoalTracker = () => {
 
     try {
       const now = new Date();
-      const period = newGoal.type === 'weekly' 
-        ? format(startOfWeek(now), 'yyyy-ww')
-        : format(startOfMonth(now), 'yyyy-MM');
+      let period = '';
+      
+      if (newGoal.type === 'weekly') {
+        const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+        period = format(weekStart, 'yyyy-MM-dd');
+      } else {
+        period = format(startOfMonth(now), 'yyyy-MM');
+      }
 
-      await enhancedDb.goals.add({
-        habitId: newGoal.habitId,
-        type: newGoal.type,
-        target: newGoal.target,
-        period,
-        achieved: false,
-        createdAt: now
-      });
+      await dbCreateGoal(newGoal.habitId, newGoal.type, newGoal.target, period);
 
       toast({
         title: "Goal created! 🎯",
@@ -89,9 +196,29 @@ export const GoalTracker = () => {
     }
   };
 
-  const calculateProgress = (goal: Goal): number => {
-    // Mock calculation - in real app would calculate from entries
-    return Math.floor(Math.random() * 100);
+  const calculateProgress = (goal: GoalWithProgress): number => {
+    if (!goal.totalDays || goal.totalDays === 0) return 0;
+    return Math.round((goal.currentProgress / goal.totalDays) * 100);
+  };
+
+  const deleteGoal = async (goalId: number) => {
+    try {
+      await dbDeleteGoal(goalId);
+      toast({
+        title: "Goal deleted",
+        description: "The goal has been removed.",
+      });
+      loadGoals();
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Error deleting goal:', error);
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete goal. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -203,9 +330,34 @@ export const GoalTracker = () => {
                   
                   <div className="flex items-center space-x-2">
                     <Badge variant={isAchieved ? "default" : "secondary"}>
-                      {Math.floor(progress * goal.target / 100)}/{goal.target}
+                      {goal.currentProgress}/{goal.totalDays}
                     </Badge>
                     {isAchieved && <Badge className="bg-success text-success-foreground">Achieved!</Badge>}
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="destructive">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Goal?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this goal? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => deleteGoal(goal.id!)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
                 
@@ -224,7 +376,7 @@ export const GoalTracker = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <TrendingUp className="w-4 h-4" />
-                    <span>{Math.floor(progress * goal.target / 100)} completed</span>
+                    <span>{goal.currentProgress} completed</span>
                   </div>
                 </div>
               </Card>

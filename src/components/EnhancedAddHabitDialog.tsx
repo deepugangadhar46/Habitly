@@ -12,6 +12,7 @@ import { Plus, Sparkles } from 'lucide-react';
 import { db } from '@/lib/database';
 import { habitCategories, habitTemplates } from '@/lib/starterHabits';
 import { useToast } from '@/hooks/use-toast';
+import { generateMotivation } from '@/ai/generateMotivation';
 
 interface EnhancedAddHabitDialogProps {
   onHabitAdded: () => void;
@@ -62,10 +63,29 @@ export const EnhancedAddHabitDialog = ({ onHabitAdded }: EnhancedAddHabitDialogP
         notes: habitData.notes
       });
 
-      toast({
-        title: "Habit created! 🎉",
-        description: `${habitData.emoji} ${habitData.name} is ready to go!`,
-      });
+      // Generate AI motivation message
+      try {
+        const motivation = await generateMotivation(habitData.name, habitData.category);
+        if (motivation) {
+          toast({
+            title: "Habit created! 🎉",
+            description: motivation,
+          });
+        } else {
+          toast({
+            title: "Habit created! 🎉",
+            description: `${habitData.emoji} ${habitData.name} is ready to go!`,
+          });
+        }
+      } catch (motivationError) {
+        if (import.meta.env.DEV) {
+          console.error('Error generating motivation:', motivationError);
+        }
+        toast({
+          title: "Habit created! 🎉",
+          description: `${habitData.emoji} ${habitData.name} is ready to go!`,
+        });
+      }
 
       onHabitAdded();
       setOpen(false);

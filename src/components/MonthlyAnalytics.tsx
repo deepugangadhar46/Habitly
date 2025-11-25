@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   TrendingUp, 
@@ -16,7 +17,9 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
-  X
+  X,
+  Clock,
+  CheckCircle2
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -48,6 +51,7 @@ export const MonthlyAnalytics = () => {
   // History calendar state
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [showDayDetails, setShowDayDetails] = useState(false);
   const [dayEntries, setDayEntries] = useState<Map<string, any>>(new Map());
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [sadStreakDetected, setSadStreakDetected] = useState(false);
@@ -186,7 +190,14 @@ export const MonthlyAnalytics = () => {
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-  const handleDateClick = (date: Date) => setSelectedDate(date);
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const dayData = dayEntries.get(dateStr);
+    if (dayData && dayData.habits.length > 0) {
+      setShowDayDetails(true);
+    }
+  };
   
   const toggleCardExpansion = (cardId: string) => {
     const newExpanded = new Set(expandedCards);
@@ -622,6 +633,92 @@ export const MonthlyAnalytics = () => {
           </TabsContent>
         </Tabs>
       </Card>
+
+      {/* Day Details Dialog */}
+      <Dialog open={showDayDetails} onOpenChange={setShowDayDetails}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedDate && format(selectedDate, 'EEEE, MMMM d, yyyy')}</DialogTitle>
+            <DialogDescription>Habits completed on this day</DialogDescription>
+          </DialogHeader>
+          
+          {selectedDate && (() => {
+            const dateStr = format(selectedDate, 'yyyy-MM-dd');
+            const dayData = dayEntries.get(dateStr);
+            
+            if (!dayData || dayData.habits.length === 0) {
+              return (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">📭</div>
+                  <p className="text-muted-foreground">No habits completed on this day</p>
+                </div>
+              );
+            }
+            
+            const completedHabits = dayData.habits.filter((h: any) => h.completed);
+            
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle2 className="w-5 h-5 text-success" />
+                    <span className="font-semibold">
+                      {completedHabits.length} / {dayData.totalHabits} habits completed
+                    </span>
+                  </div>
+                </div>
+                
+                {dayData.dominantMood && (
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-2xl">{dayData.dominantMood}</span>
+                      <span className="text-sm text-muted-foreground">
+                        Overall mood for the day
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Completed Habits:</h4>
+                  {completedHabits.map((habit: any) => (
+                    <Card key={habit.habitId} className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{habit.emoji}</span>
+                        <div className="flex-1">
+                          <p className="font-medium">{habit.habitName}</p>
+                          {habit.mood && (
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-lg">{habit.mood}</span>
+                              <span className="text-xs text-muted-foreground">Mood</span>
+                            </div>
+                          )}
+                          {habit.completedAt && (
+                            <div className="flex items-center space-x-1 mt-1 text-xs text-muted-foreground">
+                              <Clock className="w-3 h-3" />
+                              <span>{format(new Date(habit.completedAt), 'h:mm a')}</span>
+                            </div>
+                          )}
+                        </div>
+                        <Badge variant="secondary">Complete</Badge>
+                      </div>
+                      {habit.notes && (
+                        <p className="mt-2 text-sm text-muted-foreground italic">
+                          "{habit.notes}"
+                        </p>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+          
+          <div className="flex justify-end">
+            <Button onClick={() => setShowDayDetails(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

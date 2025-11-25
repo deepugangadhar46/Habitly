@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { enhancedDb, Goal } from '@/lib/database-enhanced';
-import { db } from '@/lib/database';
+import { db, Goal } from '@/lib/database';
 import { startOfWeek, endOfWeek, format as fmt, isWithinInterval } from 'date-fns';
 
 export type GoalWithCurrent = Goal & { current: number };
@@ -11,7 +10,7 @@ export const useGoals = () => {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const all = await enhancedDb.goals.toArray();
+    const all = await db.goals.toArray();
     const now = new Date();
     const wStart = startOfWeek(now, { weekStartsOn: 1 });
     const wEnd = endOfWeek(now, { weekStartsOn: 1 });
@@ -29,10 +28,10 @@ export const useGoals = () => {
 
   const upsertGoal = useCallback(async (habitId: number, target: number) => {
     const now = new Date();
-    const weekStartStr = fmt(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-ww');
-    const existing = await enhancedDb.goals.where({ habitId, period: weekStartStr, type: 'weekly' }).first();
+    const weekStartStr = fmt(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+    const existing = await db.goals.where('habitId').equals(habitId).and(g => g.period === weekStartStr && g.type === 'weekly').first();
     if (existing) {
-      await enhancedDb.goals.update(existing.id!, { target });
+      await db.goals.update(existing.id!, { target });
     } else {
       const g: Goal = {
         habitId,
@@ -42,7 +41,7 @@ export const useGoals = () => {
         achieved: false,
         createdAt: new Date(),
       };
-      await enhancedDb.goals.add(g);
+      await db.goals.add(g);
     }
     await refresh();
   }, [refresh]);

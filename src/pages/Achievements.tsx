@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Trophy, Lock, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getHabitsWithStreaks } from '@/lib/database';
-import { initializeAchievements } from '@/lib/database-enhanced';
+import { db, initializeAchievements, getHabitsWithStreaks } from '@/lib/database';
 import { useAchievements } from '@/hooks/useAchievements';
 
 const Achievements = () => {

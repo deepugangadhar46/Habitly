@@ -6,7 +6,7 @@ import MotivationQuote from '@/components/MotivationQuote';
 import { ExportImportDialog } from '@/components/ExportImportDialog';
 import { NavigationBar } from '@/components/NavigationBar';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
-import { GoalTracker } from '@/components/GoalTracker';
+// import { GoalTracker } from '@/components/GoalTracker'; // COMMENTED OUT - Goal feature disabled
 import { Habit, HabitEntry, getHabitsWithStreaks, getTodayEntry } from '@/lib/database';
 import { Loader2, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -194,10 +194,10 @@ export const HabitTracker = () => {
           </div>
         )}
 
-        {/* Goals Section */}
-        <div className="mt-8 md:mt-12">
+        {/* Goals Section - COMMENTED OUT */}
+        {/* <div className="mt-8 md:mt-12">
           <GoalTracker />
-        </div>
+        </div> */}
       </div>
       
       <PWAInstallPrompt />

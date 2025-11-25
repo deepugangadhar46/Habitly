@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { enhancedDb, Achievement } from '@/lib/database-enhanced';
-import { db, getHabitsWithStreaks } from '@/lib/database';
+import { db, getHabitsWithStreaks, Achievement } from '@/lib/database';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 
 const toISO = (d: Date) => d.toISOString().split('T')[0];
@@ -16,7 +15,7 @@ export const useAchievements = () => {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const list = await enhancedDb.achievements.toArray();
+    const list = await db.achievements.toArray();
     setAchievements(list);
     setLoading(false);
   }, []);
@@ -71,7 +70,7 @@ export const useAchievements = () => {
     const has80Week = Array.from(weeklyRates.values()).some(r => r >= 80);
 
     // Map by name to update existing default achievements
-    const list = await enhancedDb.achievements.toArray();
+    const list = await db.achievements.toArray();
     const findByName = (name: string) => list.find(a => a.name.toLowerCase() === name.toLowerCase());
 
     const updates: Array<{ id: number; date: Date }> = [];
@@ -88,7 +87,7 @@ export const useAchievements = () => {
     mark(findByName('Consistency King'), hasMonthly60);
 
     for (const u of updates) {
-      await enhancedDb.achievements.update(u.id, { unlockedAt: u.date });
+      await db.achievements.update(u.id, { unlockedAt: u.date });
     }
 
     await refresh();
