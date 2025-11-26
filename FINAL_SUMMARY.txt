@@ -17,11 +17,16 @@
 2. Start dev server:
    $ npm run dev
 
-3. Test:
+3. Test LLM Feature:
    - Open http://localhost:5173
    - Click "Add Habit"
    - Create a habit (e.g., "Cycling" in "Fitness")
    - See personalized motivational message! ✨
+   - Create another habit with different category
+   - See different personalized message
+   - Check console (F12) for any errors
+
+📋 See TEST_LLM.md for detailed testing guide
 
 
 ✅ WHAT WAS IMPLEMENTED

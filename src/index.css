@@ -58,7 +58,7 @@ All colors MUST be HSL. Warm, encouraging, and emotionally supportive.
     /* Custom gradients for emotional engagement */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-glow)));
-    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(var(--success-glow)));
+    --gradient-success: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-warm: linear-gradient(135deg, hsl(25 80% 85%), hsl(35 70% 90%));
     --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
 
@@ -138,7 +138,7 @@ All colors MUST be HSL. Warm, encouraging, and emotionally supportive.
     /* Premium dark mode gradients */
     --gradient-primary: linear-gradient(135deg, hsl(12 100% 54%), hsl(12 100% 64%));
     --gradient-accent: linear-gradient(135deg, hsl(210 95% 62%), hsl(210 95% 72%));
-    --gradient-success: linear-gradient(135deg, hsl(160 45% 23%), hsl(160 45% 28%));
+    --gradient-success: linear-gradient(135deg, hsl(12 100% 54%), hsl(12 100% 64%));
     --gradient-warm: linear-gradient(135deg, hsl(240 5% 18%), hsl(240 5% 24%));
     --gradient-glass: linear-gradient(135deg, hsla(240 5% 18%, 0.9), hsla(240 5% 16%, 0.7));
 
